@@ -1,6 +1,6 @@
 # MicDrop
 
-Your new favourite music reviewing app. Log albums, tracks, and artists. Find your band.
+Your new favorite music reviewing app. Log albums, tracks, and artists. Find your band.
 
 ## Stack
 
