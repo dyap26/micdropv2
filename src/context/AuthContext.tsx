@@ -62,6 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: { data: { username } },
     });
     if (error) throw error;
+    // If email confirmation is disabled, Supabase returns a live session here.
+    // onAuthStateChange will fire and update state automatically, but setting
+    // it directly avoids a race condition on slower devices.
     if (data.session) {
       setSession(data.session);
       if (data.session.user) fetchProfile(data.session.user.id);

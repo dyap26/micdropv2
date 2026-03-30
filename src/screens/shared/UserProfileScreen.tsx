@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList, Profile, Review } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { showAlert } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'UserProfile'>;
 
@@ -48,7 +49,7 @@ export default function UserProfileScreen({ route, navigation }: Props) {
         setFollowerCount(c => c + 1);
       }
     } catch {
-      Alert.alert('Error', 'Could not update follow.');
+      showAlert('Error', 'Could not update follow.');
     } finally {
       setFollowLoading(false);
     }

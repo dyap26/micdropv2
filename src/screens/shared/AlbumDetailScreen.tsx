@@ -1,19 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import {
   View, Text, Image, ScrollView, TouchableOpacity,
-  ActivityIndicator, Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
 import { fetchAlbum, fetchAlbumTracks, SpotifyAlbum, SpotifyTrack, formatDuration } from '../../lib/spotify';
 import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../context/AuthContext';
+import { showAlert } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'AlbumDetail'>;
 
 export default function AlbumDetailScreen({ route, navigation }: Props) {
   const { id } = route.params;
-  const { user } = useAuth();
   const [album, setAlbum] = useState<SpotifyAlbum | null>(null);
   const [tracks, setTracks] = useState<SpotifyTrack[]>([]);
   const [avgRating, setAvgRating] = useState<{ avg: number; count: number } | null>(null);
@@ -23,15 +22,13 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
     Promise.all([
       fetchAlbum(id),
       fetchAlbumTracks(id),
-      supabase.from('item_ratings').select('*').eq('target_type', 'album').eq('target_id', id).single(),
+      supabase.from('item_ratings').select('*').eq('target_type', 'album').eq('target_id', id).maybeSingle(),
     ]).then(([albumData, trackData, ratingRes]) => {
       setAlbum(albumData);
       setTracks(trackData);
       if (ratingRes.data) {
         setAvgRating({ avg: ratingRes.data.avg_rating, count: ratingRes.data.review_count });
       }
-
-      // Cache album in Supabase
       supabase.from('artists').upsert({
         id: albumData.artist_id,
         name: albumData.artist_name,
@@ -48,7 +45,7 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
         }, { onConflict: 'id' })
       );
     }).catch(() => {
-      Alert.alert('Error', 'Could not load album.');
+      showAlert('Error', 'Could not load album.');
       navigation.goBack();
     }).finally(() => setLoading(false));
   }, [id]);
@@ -63,19 +60,14 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
 
   return (
     <ScrollView style={{ backgroundColor: '#0a0a0a' }} contentContainerStyle={{ paddingBottom: 60 }}>
-      {/* Header art */}
       <View style={{ alignItems: 'center', paddingTop: 20, paddingBottom: 20 }}>
         {album.artwork_url ? (
-          <Image
-            source={{ uri: album.artwork_url }}
-            style={{ width: 200, height: 200, borderRadius: 8 }}
-          />
+          <Image source={{ uri: album.artwork_url }} style={{ width: 200, height: 200, borderRadius: 8 }} />
         ) : (
           <View style={{ width: 200, height: 200, borderRadius: 8, backgroundColor: '#1f1f1f' }} />
         )}
       </View>
 
-      {/* Meta */}
       <View style={{ paddingHorizontal: 20, marginBottom: 16 }}>
         <Text style={{ color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 4 }}>
           {album.title}
@@ -86,7 +78,6 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
         <Text style={{ color: '#666', fontSize: 13 }}>
           {album.release_year}  ·  {album.total_tracks} tracks  ·  {album.type}
         </Text>
-
         {avgRating && (
           <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 12 }}>
             <Text style={{ color: '#fff', fontSize: 28, fontWeight: '700' }}>
@@ -99,7 +90,6 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
         )}
       </View>
 
-      {/* Actions */}
       <View style={{ paddingHorizontal: 20, marginBottom: 24 }}>
         <TouchableOpacity
           onPress={() => navigation.navigate('WriteReview', {
@@ -107,18 +97,12 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
             targetId: album.id,
             targetName: album.title,
           })}
-          style={{
-            backgroundColor: '#6C47FF',
-            borderRadius: 10,
-            paddingVertical: 13,
-            alignItems: 'center',
-          }}
+          style={{ backgroundColor: '#6C47FF', borderRadius: 10, paddingVertical: 13, alignItems: 'center' }}
         >
           <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>Write a review</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Track list */}
       <View style={{ paddingHorizontal: 20 }}>
         <Text style={{ color: '#888', fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
           Tracks
@@ -133,9 +117,7 @@ export default function AlbumDetailScreen({ route, navigation }: Props) {
             }}
           >
             <Text style={{ color: '#555', fontSize: 13, width: 28 }}>{i + 1}</Text>
-            <Text style={{ flex: 1, color: '#fff', fontSize: 14 }} numberOfLines={1}>
-              {track.title}
-            </Text>
+            <Text style={{ flex: 1, color: '#fff', fontSize: 14 }} numberOfLines={1}>{track.title}</Text>
             <Text style={{ color: '#555', fontSize: 13 }}>{formatDuration(track.duration_ms)}</Text>
           </TouchableOpacity>
         ))}

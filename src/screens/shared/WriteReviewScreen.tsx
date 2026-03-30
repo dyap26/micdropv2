@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Switch,
 } from 'react-native';
@@ -13,6 +12,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { showAlert } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'WriteReview'>;
 
@@ -25,16 +25,18 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
   const [body, setBody] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
     if (!user) return;
     if (rating === null && !body.trim()) {
-      Alert.alert('Add a rating or text', 'A review needs at least a rating or some text.');
+      setError('Add a rating or write something — a review needs at least one.');
       return;
     }
+    setError(null);
     setLoading(true);
     try {
-      const { error } = await supabase.from('reviews').upsert({
+      const { error: dbError } = await supabase.from('reviews').upsert({
         user_id: user.id,
         target_type: targetType,
         target_id: targetId,
@@ -43,11 +45,10 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
         is_public: isPublic,
       }, { onConflict: 'user_id,target_type,target_id' });
 
-      if (error) throw error;
+      if (dbError) throw dbError;
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert('Error', e.message ?? 'Could not save review.');
-    } finally {
+      setError(e.message ?? 'Could not save review. Please try again.');
       setLoading(false);
     }
   };
@@ -65,13 +66,12 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
         {targetName}
       </Text>
 
-      {/* Rating picker */}
       <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 10 }}>Rating</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
         {HALF_STEPS.map(step => (
           <TouchableOpacity
             key={step}
-            onPress={() => setRating(rating === step ? null : step)}
+            onPress={() => { setRating(rating === step ? null : step); setError(null); }}
             style={{
               paddingHorizontal: 14,
               paddingVertical: 8,
@@ -88,11 +88,10 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
         ))}
       </View>
 
-      {/* Text body */}
       <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 10 }}>Review (optional)</Text>
       <TextInput
         value={body}
-        onChangeText={setBody}
+        onChangeText={v => { setBody(v); setError(null); }}
         placeholder="What did you think?"
         placeholderTextColor="#444"
         multiline
@@ -111,7 +110,19 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
         }}
       />
 
-      {/* Public toggle */}
+      {error && (
+        <View style={{
+          marginBottom: 16,
+          backgroundColor: '#ff4d4d18',
+          borderRadius: 8,
+          borderWidth: 0.5,
+          borderColor: '#ff4d4d44',
+          padding: 12,
+        }}>
+          <Text style={{ color: '#ff6b6b', fontSize: 13 }}>{error}</Text>
+        </View>
+      )}
+
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
         <View>
           <Text style={{ color: '#fff', fontSize: 15 }}>Public</Text>
@@ -127,7 +138,6 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
         />
       </View>
 
-      {/* Submit */}
       <TouchableOpacity
         onPress={handleSubmit}
         disabled={loading}
@@ -136,6 +146,7 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
           borderRadius: 10,
           paddingVertical: 15,
           alignItems: 'center',
+          opacity: loading ? 0.7 : 1,
         }}
       >
         {loading ? (

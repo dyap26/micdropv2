@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -20,15 +19,19 @@ export default function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    if (!email.trim() || !password) return;
+    setError(null);
+    if (!email.trim() || !password) {
+      setError('Please enter your email and password.');
+      return;
+    }
     setLoading(true);
     try {
       await signIn(email.trim().toLowerCase(), password);
     } catch (e: any) {
-      Alert.alert('Login failed', e.message ?? 'Please check your credentials.');
-    } finally {
+      setError(e.message ?? 'Please check your credentials.');
       setLoading(false);
     }
   };
@@ -48,7 +51,7 @@ export default function LoginScreen({ navigation }: Props) {
 
         <TextInput
           value={email}
-          onChangeText={setEmail}
+          onChangeText={v => { setEmail(v); setError(null); }}
           placeholder="Email"
           placeholderTextColor="#555"
           keyboardType="email-address"
@@ -59,12 +62,25 @@ export default function LoginScreen({ navigation }: Props) {
 
         <TextInput
           value={password}
-          onChangeText={setPassword}
+          onChangeText={v => { setPassword(v); setError(null); }}
           placeholder="Password"
           placeholderTextColor="#555"
           secureTextEntry
           style={[inputStyle, { marginTop: 12 }]}
         />
+
+        {error && (
+          <View style={{
+            marginTop: 14,
+            backgroundColor: '#ff4d4d18',
+            borderRadius: 8,
+            borderWidth: 0.5,
+            borderColor: '#ff4d4d44',
+            padding: 12,
+          }}>
+            <Text style={{ color: '#ff6b6b', fontSize: 13 }}>{error}</Text>
+          </View>
+        )}
 
         <TouchableOpacity
           onPress={handleLogin}
@@ -75,6 +91,7 @@ export default function LoginScreen({ navigation }: Props) {
             borderRadius: 10,
             paddingVertical: 15,
             alignItems: 'center',
+            opacity: loading ? 0.7 : 1,
           }}
         >
           {loading ? (
@@ -103,7 +120,7 @@ const inputStyle = {
   borderRadius: 10,
   paddingHorizontal: 16,
   paddingVertical: 14,
-  color: '#fff',
+  color: '#fff' as const,
   fontSize: 15,
   borderWidth: 0.5,
   borderColor: '#2a2a2a',

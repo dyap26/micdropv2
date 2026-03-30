@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList, List } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { showConfirm } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'MyLists'>;
 
@@ -42,21 +42,15 @@ export default function MyListsScreen({ navigation }: Props) {
   };
 
   const confirmDelete = (list: List) => {
-    Alert.alert(
-      'Delete list',
-      `Delete "${list.title}"? This cannot be undone.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            await supabase.from('lists').delete().eq('id', list.id);
-            setLists(prev => prev.filter(l => l.id !== list.id));
-          },
-        },
-      ]
-    );
+    showConfirm({
+      title: 'Delete list',
+      message: `Delete "${list.title}"? This cannot be undone.`,
+      confirmText: 'Delete',
+      onConfirm: async () => {
+        await supabase.from('lists').delete().eq('id', list.id);
+        setLists(prev => prev.filter(l => l.id !== list.id));
+      },
+    });
   };
 
   if (loading) {
@@ -116,20 +110,13 @@ export default function MyListsScreen({ navigation }: Props) {
               {item.title}
             </Text>
             {!item.is_public && (
-              <View style={{
-                backgroundColor: '#1f1f1f',
-                borderRadius: 4,
-                paddingHorizontal: 7,
-                paddingVertical: 2,
-              }}>
+              <View style={{ backgroundColor: '#1f1f1f', borderRadius: 4, paddingHorizontal: 7, paddingVertical: 2 }}>
                 <Text style={{ color: '#666', fontSize: 11 }}>Private</Text>
               </View>
             )}
           </View>
           {item.description ? (
-            <Text style={{ color: '#777', fontSize: 13 }} numberOfLines={2}>
-              {item.description}
-            </Text>
+            <Text style={{ color: '#777', fontSize: 13 }} numberOfLines={2}>{item.description}</Text>
           ) : null}
           <Text style={{ color: '#444', fontSize: 12, marginTop: 6 }}>
             {new Date(item.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

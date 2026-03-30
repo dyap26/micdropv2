@@ -34,7 +34,6 @@ export async function getAccessToken(): Promise<string> {
 
 async function spotifyFetch<T>(path: string): Promise<T> {
   const token = await getAccessToken();
-  console.log('spotify token:', token ? token.slice(0, 20) + '...' : 'MISSING');
   const res = await fetch(`${BASE}${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   });

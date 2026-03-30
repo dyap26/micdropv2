@@ -26,7 +26,6 @@ export default function RegisterScreen({ navigation }: Props) {
 
   const handleRegister = async () => {
     setError(null);
-
     if (!username.trim() || !email.trim() || !password) {
       setError('All fields are required.');
       return;
@@ -39,13 +38,9 @@ export default function RegisterScreen({ navigation }: Props) {
       setError('Password must be at least 8 characters.');
       return;
     }
-
     setLoading(true);
     try {
       await signUp(email.trim().toLowerCase(), password, username.trim().toLowerCase());
-      // If email confirmation is disabled, AuthContext will update isLoggedIn
-      // and the navigator will unmount this screen automatically.
-      // If confirmation is enabled, show the success screen instead.
       setSuccess(true);
     } catch (e: any) {
       setError(e.message ?? 'Something went wrong. Please try again.');
@@ -53,7 +48,6 @@ export default function RegisterScreen({ navigation }: Props) {
     }
   };
 
-  // Success screen — shown when email confirmation is required
   if (success) {
     return (
       <View style={{ flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'center', alignItems: 'center', padding: 32 }}>
@@ -63,7 +57,7 @@ export default function RegisterScreen({ navigation }: Props) {
           justifyContent: 'center', alignItems: 'center',
           marginBottom: 24,
         }}>
-          <Text style={{ fontSize: 28 }}>✓</Text>
+          <Text style={{ fontSize: 28, color: '#6C47FF' }}>✓</Text>
         </View>
         <Text style={{ color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 12, textAlign: 'center' }}>
           Check your email
@@ -137,7 +131,6 @@ export default function RegisterScreen({ navigation }: Props) {
           style={[inputStyle, { marginTop: 12 }]}
         />
 
-        {/* Inline error */}
         {error && (
           <View style={{
             marginTop: 14,

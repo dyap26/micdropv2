@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  Alert,
   Platform,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProfileStackParamList, Review } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { showConfirm } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<ProfileStackParamList, 'MyProfile'>;
 
@@ -47,20 +47,12 @@ export default function ProfileScreen({ navigation }: Props) {
   };
 
   const handleSignOut = () => {
-    if (Platform.OS === 'web') {
-      if (window.confirm('Are you sure you want to sign out?')) {
-        signOut();
-      }
-    } else {
-      Alert.alert('Sign out', 'Are you sure?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign out',
-          style: 'destructive',
-          onPress: () => signOut(),
-        },
-      ]);
-    }
+    showConfirm({
+      title: 'Sign out',
+      message: 'Are you sure you want to sign out?',
+      confirmText: 'Sign out',
+      onConfirm: () => signOut(),
+    });
   };
 
   if (loading || !profile) {
@@ -77,7 +69,6 @@ export default function ProfileScreen({ navigation }: Props) {
       contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C47FF" />}
     >
-      {/* Avatar + name */}
       <View style={{ alignItems: 'center', marginBottom: 24 }}>
         <View style={{
           width: 80, height: 80, borderRadius: 40,
@@ -100,7 +91,6 @@ export default function ProfileScreen({ navigation }: Props) {
         ) : null}
       </View>
 
-      {/* Stats row */}
       <View style={{ flexDirection: 'row', justifyContent: 'space-around', marginBottom: 24 }}>
         {[
           { label: 'Reviews', value: reviews.length },
@@ -114,7 +104,6 @@ export default function ProfileScreen({ navigation }: Props) {
         ))}
       </View>
 
-      {/* Actions */}
       <View style={{ flexDirection: 'row', gap: 10, marginBottom: 28 }}>
         <TouchableOpacity
           onPress={() => navigation.navigate('EditProfile')}
@@ -136,7 +125,6 @@ export default function ProfileScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
-      {/* Recent reviews */}
       <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600', marginBottom: 12 }}>
         Recent reviews
       </Text>
@@ -161,7 +149,6 @@ export default function ProfileScreen({ navigation }: Props) {
         ))
       )}
 
-      {/* Sign out */}
       <TouchableOpacity
         onPress={handleSignOut}
         style={{ marginTop: 32, alignItems: 'center' }}

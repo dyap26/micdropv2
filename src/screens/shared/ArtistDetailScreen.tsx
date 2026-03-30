@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, Image, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
 import { fetchArtist, fetchArtistAlbums, SpotifyArtist, SpotifyAlbum } from '../../lib/spotify';
 import { supabase } from '../../lib/supabase';
+import { showAlert } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ArtistDetail'>;
 
@@ -18,18 +19,17 @@ export default function ArtistDetailScreen({ route, navigation }: Props) {
     Promise.all([
       fetchArtist(id),
       fetchArtistAlbums(id),
-      supabase.from('item_ratings').select('*').eq('target_type', 'artist').eq('target_id', id).single(),
+      supabase.from('item_ratings').select('*').eq('target_type', 'artist').eq('target_id', id).maybeSingle(),
     ]).then(([artistData, albumData, ratingRes]) => {
       setArtist(artistData);
       setAlbums(albumData);
       if (ratingRes.data) setAvgRating({ avg: ratingRes.data.avg_rating, count: ratingRes.data.review_count });
-
       supabase.from('artists').upsert({
         id: artistData.id, name: artistData.name,
         image_url: artistData.image_url, genres: artistData.genres,
       }, { onConflict: 'id' });
     }).catch(() => {
-      Alert.alert('Error', 'Could not load artist.');
+      showAlert('Error', 'Could not load artist.');
       navigation.goBack();
     }).finally(() => setLoading(false));
   }, [id]);

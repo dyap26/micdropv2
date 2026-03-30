@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList, List, ListItem } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
+import { showConfirm } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'ListDetail'>;
 
@@ -26,32 +26,21 @@ async function enrichItems(items: ListItem[]): Promise<EnrichedItem[]> {
   const artistIds = items.filter(i => i.target_type === 'artist').map(i => i.target_id);
 
   const [albumsRes, tracksRes, artistsRes] = await Promise.all([
-    albumIds.length
-      ? supabase.from('albums').select('id, title, artist_id').in('id', albumIds)
-      : Promise.resolve({ data: [] }),
-    trackIds.length
-      ? supabase.from('tracks').select('id, title, artist_id').in('id', trackIds)
-      : Promise.resolve({ data: [] }),
-    artistIds.length
-      ? supabase.from('artists').select('id, name').in('id', artistIds)
-      : Promise.resolve({ data: [] }),
+    albumIds.length ? supabase.from('albums').select('id, title, artist_id').in('id', albumIds) : Promise.resolve({ data: [] }),
+    trackIds.length ? supabase.from('tracks').select('id, title, artist_id').in('id', trackIds) : Promise.resolve({ data: [] }),
+    artistIds.length ? supabase.from('artists').select('id, name').in('id', artistIds) : Promise.resolve({ data: [] }),
   ]);
 
-  // Build artist name lookup
   const artistNames: Record<string, string> = {};
   for (const a of (artistsRes.data ?? [])) artistNames[a.id] = a.name;
 
-  // Fetch artist names for albums/tracks
   const allArtistIds = [
     ...(albumsRes.data ?? []).map((a: any) => a.artist_id),
     ...(tracksRes.data ?? []).map((t: any) => t.artist_id),
   ].filter(Boolean);
 
   if (allArtistIds.length) {
-    const { data: moreArtists } = await supabase
-      .from('artists')
-      .select('id, name')
-      .in('id', allArtistIds);
+    const { data: moreArtists } = await supabase.from('artists').select('id, name').in('id', allArtistIds);
     for (const a of (moreArtists ?? [])) artistNames[a.id] = a.name;
   }
 
@@ -84,9 +73,7 @@ export default function ListDetailScreen({ route, navigation }: Props) {
       supabase.from('lists').select('*').eq('id', listId).single(),
       supabase.from('list_items').select('*').eq('list_id', listId).order('position'),
     ]);
-
     setList(listRes.data);
-
     if (itemsRes.data?.length) {
       const enriched = await enrichItems(itemsRes.data);
       setItems(enriched);
@@ -105,18 +92,16 @@ export default function ListDetailScreen({ route, navigation }: Props) {
     setRefreshing(false);
   };
 
-  const removeItem = async (item: EnrichedItem) => {
-    Alert.alert('Remove item', `Remove "${item.name}" from this list?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          await supabase.from('list_items').delete().eq('id', item.id);
-          setItems(prev => prev.filter(i => i.id !== item.id));
-        },
+  const removeItem = (item: EnrichedItem) => {
+    showConfirm({
+      title: 'Remove item',
+      message: `Remove "${item.name}" from this list?`,
+      confirmText: 'Remove',
+      onConfirm: async () => {
+        await supabase.from('list_items').delete().eq('id', item.id);
+        setItems(prev => prev.filter(i => i.id !== item.id));
       },
-    ]);
+    });
   };
 
   const navigateToTarget = (item: EnrichedItem) => {
@@ -143,11 +128,7 @@ export default function ListDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  const typeIcon = (type: string) => {
-    if (type === 'album') return '◼';
-    if (type === 'track') return '♪';
-    return '●';
-  };
+  const typeIcon = (type: string) => type === 'album' ? '◼' : type === 'track' ? '♪' : '●';
 
   return (
     <FlatList
@@ -155,15 +136,11 @@ export default function ListDetailScreen({ route, navigation }: Props) {
       keyExtractor={i => i.id}
       style={{ backgroundColor: '#0a0a0a' }}
       contentContainerStyle={{ paddingBottom: 60 }}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C47FF" />
-      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C47FF" />}
       ListHeaderComponent={
         <View style={{ padding: 20, paddingBottom: 12 }}>
           <View style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 }}>
-            <Text style={{ flex: 1, color: '#fff', fontSize: 22, fontWeight: '700' }}>
-              {list.title}
-            </Text>
+            <Text style={{ flex: 1, color: '#fff', fontSize: 22, fontWeight: '700' }}>{list.title}</Text>
             {!list.is_public && (
               <View style={{ backgroundColor: '#1f1f1f', borderRadius: 4, paddingHorizontal: 7, paddingVertical: 3, marginLeft: 10 }}>
                 <Text style={{ color: '#666', fontSize: 11 }}>Private</Text>
@@ -171,13 +148,9 @@ export default function ListDetailScreen({ route, navigation }: Props) {
             )}
           </View>
           {list.description ? (
-            <Text style={{ color: '#777', fontSize: 14, lineHeight: 20, marginBottom: 8 }}>
-              {list.description}
-            </Text>
+            <Text style={{ color: '#777', fontSize: 14, lineHeight: 20, marginBottom: 8 }}>{list.description}</Text>
           ) : null}
-          <Text style={{ color: '#444', fontSize: 12 }}>
-            {items.length} item{items.length !== 1 ? 's' : ''}
-          </Text>
+          <Text style={{ color: '#444', fontSize: 12 }}>{items.length} item{items.length !== 1 ? 's' : ''}</Text>
         </View>
       }
       ListEmptyComponent={
@@ -203,29 +176,13 @@ export default function ListDetailScreen({ route, navigation }: Props) {
             borderBottomColor: '#1a1a1a',
           }}
         >
-          {/* Position number */}
           <Text style={{ color: '#444', fontSize: 13, width: 28 }}>{index + 1}</Text>
-
-          {/* Type icon */}
           <Text style={{ color: '#6C47FF', fontSize: 12, width: 22 }}>{typeIcon(item.target_type)}</Text>
-
-          {/* Info */}
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }} numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.subtitle ? (
-              <Text style={{ color: '#666', fontSize: 12, marginTop: 1 }} numberOfLines={1}>
-                {item.subtitle}
-              </Text>
-            ) : null}
-            {item.note ? (
-              <Text style={{ color: '#555', fontSize: 12, fontStyle: 'italic', marginTop: 2 }} numberOfLines={1}>
-                {item.note}
-              </Text>
-            ) : null}
+            <Text style={{ color: '#fff', fontSize: 14, fontWeight: '500' }} numberOfLines={1}>{item.name}</Text>
+            {item.subtitle ? <Text style={{ color: '#666', fontSize: 12, marginTop: 1 }} numberOfLines={1}>{item.subtitle}</Text> : null}
+            {item.note ? <Text style={{ color: '#555', fontSize: 12, fontStyle: 'italic', marginTop: 2 }} numberOfLines={1}>{item.note}</Text> : null}
           </View>
-
           <Text style={{ color: '#333', fontSize: 18 }}>›</Text>
         </TouchableOpacity>
       )}

@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   ActivityIndicator,
   Switch,
 } from 'react-native';
@@ -22,16 +21,18 @@ export default function CreateListScreen({ navigation }: Props) {
   const [description, setDescription] = useState('');
   const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleCreate = async () => {
     if (!title.trim()) {
-      Alert.alert('Name required', 'Give your list a title.');
+      setError('Give your list a title.');
       return;
     }
     if (!user) return;
-
+    setError(null);
     setLoading(true);
-    const { data, error } = await supabase
+
+    const { data, error: dbError } = await supabase
       .from('lists')
       .insert({
         user_id: user.id,
@@ -42,13 +43,12 @@ export default function CreateListScreen({ navigation }: Props) {
       .select()
       .single();
 
-    if (error || !data) {
-      Alert.alert('Error', 'Could not create list.');
+    if (dbError || !data) {
+      setError('Could not create list. Please try again.');
       setLoading(false);
       return;
     }
 
-    // Navigate directly to the new list
     navigation.replace('ListDetail', { listId: data.id });
   };
 
@@ -61,16 +61,14 @@ export default function CreateListScreen({ navigation }: Props) {
       <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 8 }}>Title</Text>
       <TextInput
         value={title}
-        onChangeText={setTitle}
+        onChangeText={v => { setTitle(v); setError(null); }}
         placeholder="e.g. Best albums of 2024"
         placeholderTextColor="#444"
         autoFocus
         style={input}
       />
 
-      <Text style={{ color: '#aaa', fontSize: 13, marginTop: 20, marginBottom: 8 }}>
-        Description (optional)
-      </Text>
+      <Text style={{ color: '#aaa', fontSize: 13, marginTop: 20, marginBottom: 8 }}>Description (optional)</Text>
       <TextInput
         value={description}
         onChangeText={setDescription}
@@ -81,6 +79,19 @@ export default function CreateListScreen({ navigation }: Props) {
         textAlignVertical="top"
         style={[input, { minHeight: 100 }]}
       />
+
+      {error && (
+        <View style={{
+          marginTop: 16,
+          backgroundColor: '#ff4d4d18',
+          borderRadius: 8,
+          borderWidth: 0.5,
+          borderColor: '#ff4d4d44',
+          padding: 12,
+        }}>
+          <Text style={{ color: '#ff6b6b', fontSize: 13 }}>{error}</Text>
+        </View>
+      )}
 
       <View style={{
         flexDirection: 'row',
@@ -111,6 +122,7 @@ export default function CreateListScreen({ navigation }: Props) {
           borderRadius: 10,
           paddingVertical: 14,
           alignItems: 'center',
+          opacity: loading ? 0.7 : 1,
         }}
       >
         {loading ? (
