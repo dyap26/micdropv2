@@ -134,7 +134,7 @@ export async function fetchTrack(id: string): Promise<SpotifyTrack> {
 
 export async function fetchArtistAlbums(id: string): Promise<SpotifyAlbum[]> {
   const data = await spotifyFetch<any>(
-    `/artists/${id}/albums?include_groups=album,single&limit=20`
+    `/artists/${id}/albums?include_groups=album,single&limit=20&market=US`
   );
   return (data.items ?? []).filter(Boolean).map(normalizeAlbum);
 }

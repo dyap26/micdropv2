@@ -37,7 +37,7 @@ export interface Track {
   cached_at: string;
 }
 
-export type TargetType = 'album' | 'track' | 'artist';
+export type TargetType = 'album';
 
 export interface Review {
   id: string;
@@ -145,4 +145,5 @@ export type ProfileStackParamList = {
   AlbumDetail: { id: string };
   TrackDetail: { id: string };
   ArtistDetail: { id: string };
+  WriteReview: { targetType: TargetType; targetId: string; targetName: string };
 };

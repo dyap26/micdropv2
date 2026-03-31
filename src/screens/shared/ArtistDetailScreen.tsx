@@ -63,13 +63,6 @@ export default function ArtistDetailScreen({ route, navigation }: Props) {
       </View>
 
       <View style={{ paddingHorizontal: 20 }}>
-        <TouchableOpacity
-          onPress={() => navigation.navigate('WriteReview', { targetType: 'artist', targetId: artist.id, targetName: artist.name })}
-          style={{ backgroundColor: '#6C47FF', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginBottom: 24 }}
-        >
-          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>Write a review</Text>
-        </TouchableOpacity>
-
         <Text style={{ color: '#888', fontSize: 12, fontWeight: '600', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12 }}>
           Discography
         </Text>

@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
-import { Review, TargetType } from '../../types';
+import { Review } from '../../types';
 
 const STARS = (rating: number) => {
   const full = Math.floor(rating);
@@ -70,7 +70,7 @@ export default function ActivityScreen() {
         <View style={{ paddingTop: 60, alignItems: 'center' }}>
           <Text style={{ color: '#555', fontSize: 15 }}>No reviews yet.</Text>
           <Text style={{ color: '#444', fontSize: 13, marginTop: 6 }}>
-            Search for music to get started.
+            Search for an album to get started.
           </Text>
         </View>
       }
@@ -88,9 +88,7 @@ export default function ActivityScreen() {
             borderColor: '#222',
           }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
-              <Text style={{ color: '#888', fontSize: 12, textTransform: 'capitalize' }}>
-                {item.target_type}
-              </Text>
+              <Text style={{ color: '#888', fontSize: 12 }}>Album</Text>
               <Text style={{ color: '#555', fontSize: 12 }}>{date}</Text>
             </View>
             {item.rating != null && (

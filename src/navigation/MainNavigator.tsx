@@ -9,13 +9,11 @@ import {
   ProfileStackParamList,
 } from '../types';
 
-// Tab screens
 import FeedScreen from '../screens/tabs/FeedScreen';
 import SearchScreen from '../screens/tabs/SearchScreen';
 import ActivityScreen from '../screens/tabs/ActivityScreen';
 import ProfileScreen from '../screens/tabs/ProfileScreen';
 
-// Shared detail screens
 import AlbumDetailScreen from '../screens/shared/AlbumDetailScreen';
 import TrackDetailScreen from '../screens/shared/TrackDetailScreen';
 import ArtistDetailScreen from '../screens/shared/ArtistDetailScreen';
@@ -83,6 +81,7 @@ function ProfileStackNavigator() {
       <ProfileStack.Screen name="AlbumDetail" component={AlbumDetailScreen} options={{ title: '' }} />
       <ProfileStack.Screen name="TrackDetail" component={TrackDetailScreen} options={{ title: '' }} />
       <ProfileStack.Screen name="ArtistDetail" component={ArtistDetailScreen} options={{ title: '' }} />
+      <ProfileStack.Screen name="WriteReview" component={WriteReviewScreen} options={{ title: 'Write a review' }} />
     </ProfileStack.Navigator>
   );
 }
@@ -102,10 +101,10 @@ export default function MainNavigator() {
         tabBarLabelStyle: { fontSize: 11 },
         tabBarIcon: ({ focused, color, size }) => {
           const icons: Record<string, [string, string]> = {
-            HomeTab:     ['home',           'home-outline'],
-            SearchTab:   ['search',         'search-outline'],
-            ActivityTab: ['notifications',  'notifications-outline'],
-            ProfileTab:  ['person',         'person-outline'],
+            HomeTab:     ['home',          'home-outline'],
+            SearchTab:   ['search',        'search-outline'],
+            ActivityTab: ['notifications', 'notifications-outline'],
+            ProfileTab:  ['person',        'person-outline'],
           };
           const [active, inactive] = icons[route.name] ?? ['ellipse', 'ellipse-outline'];
           return (

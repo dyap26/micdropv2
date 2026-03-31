@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList, ReviewWithProfile } from '../../types';
@@ -24,14 +23,12 @@ export default function FeedScreen({ navigation }: Props) {
   const fetchFeed = useCallback(async () => {
     if (!user) return;
 
-    // Fetch IDs of people this user follows
     const { data: followData } = await supabase
       .from('follows')
       .select('following_id')
       .eq('follower_id', user.id);
 
     const followingIds = (followData ?? []).map((f: any) => f.following_id);
-    // Include own reviews in feed too
     const ids = [...followingIds, user.id];
 
     const { data } = await supabase
@@ -53,14 +50,6 @@ export default function FeedScreen({ navigation }: Props) {
     setRefreshing(true);
     await fetchFeed();
     setRefreshing(false);
-  };
-
-  const navigateToTarget = (review: ReviewWithProfile) => {
-    const screen =
-      review.target_type === 'album' ? 'AlbumDetail'
-      : review.target_type === 'track' ? 'TrackDetail'
-      : 'ArtistDetail';
-    navigation.navigate(screen as any, { id: review.target_id });
   };
 
   if (loading) {
@@ -100,7 +89,6 @@ export default function FeedScreen({ navigation }: Props) {
             borderColor: '#222',
           }}
         >
-          {/* Header */}
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
             <View style={{
               width: 34, height: 34, borderRadius: 17,
@@ -117,9 +105,7 @@ export default function FeedScreen({ navigation }: Props) {
                   {item.profile.display_name ?? item.profile.username}
                 </Text>
               </TouchableOpacity>
-              <Text style={{ color: '#555', fontSize: 12 }}>
-                reviewed a{item.target_type === 'artist' ? 'n' : ''} {item.target_type}
-              </Text>
+              <Text style={{ color: '#555', fontSize: 12 }}>reviewed an album</Text>
             </View>
             {item.rating != null && (
               <Text style={{ color: '#6C47FF', fontWeight: '700', fontSize: 16 }}>
@@ -128,18 +114,17 @@ export default function FeedScreen({ navigation }: Props) {
             )}
           </View>
 
-          {/* Body */}
           {item.body ? (
             <Text style={{ color: '#bbb', fontSize: 14, lineHeight: 20 }} numberOfLines={3}>
               {item.body}
             </Text>
           ) : null}
 
-          {/* Footer */}
-          <TouchableOpacity onPress={() => navigateToTarget(item)} style={{ marginTop: 10 }}>
-            <Text style={{ color: '#6C47FF', fontSize: 13 }}>
-              View {item.target_type} →
-            </Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('AlbumDetail', { id: item.target_id })}
+            style={{ marginTop: 10 }}
+          >
+            <Text style={{ color: '#6C47FF', fontSize: 13 }}>View album →</Text>
           </TouchableOpacity>
         </TouchableOpacity>
       )}

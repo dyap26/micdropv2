@@ -12,11 +12,75 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { HomeStackParamList } from '../../types';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { showAlert } from '../../lib/alert';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'WriteReview'>;
 
-const HALF_STEPS = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+function StarRating({
+  rating,
+  onChange,
+}: {
+  rating: number | null;
+  onChange: (r: number | null) => void;
+}) {
+  const stars = [1, 2, 3, 4, 5];
+
+  const getStarFill = (star: number): 'full' | 'half' | 'empty' => {
+    if (rating === null) return 'empty';
+    if (rating >= star) return 'full';
+    if (rating >= star - 0.5) return 'half';
+    return 'empty';
+  };
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 28 }}>
+      {stars.map(star => {
+        const fill = getStarFill(star);
+        return (
+          <View key={star} style={{ flexDirection: 'row', width: 44, height: 44 }}>
+            {/* Left half — half star */}
+            <TouchableOpacity
+              onPress={() => {
+                const val = star - 0.5;
+                onChange(rating === val ? null : val);
+              }}
+              style={{ width: 22, height: 44, justifyContent: 'center', overflow: 'hidden' }}
+            >
+              <Text style={{
+                fontSize: 40,
+                color: fill === 'empty' ? '#2a2a2a' : '#6C47FF',
+                lineHeight: 44,
+                marginLeft: 0,
+              }}>
+                {fill === 'empty' ? '☆' : '★'}
+              </Text>
+            </TouchableOpacity>
+            {/* Right half — full star */}
+            <TouchableOpacity
+              onPress={() => {
+                onChange(rating === star ? null : star);
+              }}
+              style={{ width: 22, height: 44, justifyContent: 'center', overflow: 'hidden' }}
+            >
+              <Text style={{
+                fontSize: 40,
+                color: fill === 'full' ? '#6C47FF' : '#2a2a2a',
+                lineHeight: 44,
+                marginLeft: -22,
+              }}>
+                {fill === 'full' ? '★' : '☆'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        );
+      })}
+      {rating !== null && (
+        <Text style={{ color: '#6C47FF', fontSize: 18, fontWeight: '700', marginLeft: 8 }}>
+          {rating.toFixed(1)}
+        </Text>
+      )}
+    </View>
+  );
+}
 
 export default function WriteReviewScreen({ route, navigation }: Props) {
   const { targetType, targetId, targetName } = route.params;
@@ -30,7 +94,7 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
   const handleSubmit = async () => {
     if (!user) return;
     if (rating === null && !body.trim()) {
-      setError('Add a rating or write something — a review needs at least one.');
+      setError('Add a star rating or write something — a review needs at least one.');
       return;
     }
     setError(null);
@@ -59,34 +123,15 @@ export default function WriteReviewScreen({ route, navigation }: Props) {
       contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={{ color: '#888', fontSize: 13, textTransform: 'capitalize', marginBottom: 4 }}>
-        {targetType}
+      <Text style={{ color: '#888', fontSize: 13, marginBottom: 4 }}>
+        Album
       </Text>
-      <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 24 }}>
+      <Text style={{ color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 28 }}>
         {targetName}
       </Text>
 
-      <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 10 }}>Rating</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 }}>
-        {HALF_STEPS.map(step => (
-          <TouchableOpacity
-            key={step}
-            onPress={() => { setRating(rating === step ? null : step); setError(null); }}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 8,
-              borderWidth: 0.5,
-              borderColor: rating === step ? '#6C47FF' : '#2a2a2a',
-              backgroundColor: rating === step ? '#6C47FF22' : '#141414',
-            }}
-          >
-            <Text style={{ color: rating === step ? '#6C47FF' : '#888', fontWeight: '500' }}>
-              {step.toFixed(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 12 }}>Your rating</Text>
+      <StarRating rating={rating} onChange={r => { setRating(r); setError(null); }} />
 
       <Text style={{ color: '#aaa', fontSize: 13, marginBottom: 10 }}>Review (optional)</Text>
       <TextInput

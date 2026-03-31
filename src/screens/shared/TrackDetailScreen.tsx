@@ -62,27 +62,15 @@ export default function TrackDetailScreen({ route, navigation }: Props) {
       <Text style={{ color: '#666', fontSize: 13, marginBottom: 4 }}>
         Track {track.track_number}  ·  {formatDuration(track.duration_ms)}
       </Text>
+
       {track.album_id ? (
-        <TouchableOpacity onPress={() => navigation.navigate('AlbumDetail', { id: track!.album_id })}>
-          <Text style={{ color: '#555', fontSize: 13 }}>View album →</Text>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AlbumDetail', { id: track!.album_id })}
+          style={{ backgroundColor: '#6C47FF', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 28 }}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>View album</Text>
         </TouchableOpacity>
       ) : null}
-
-      {avgRating && (
-        <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 16 }}>
-          <Text style={{ color: '#fff', fontSize: 26, fontWeight: '700' }}>{avgRating.avg.toFixed(2)}</Text>
-          <Text style={{ color: '#666', fontSize: 13 }}>
-            / 5  ·  {avgRating.count} review{avgRating.count !== 1 ? 's' : ''}
-          </Text>
-        </View>
-      )}
-
-      <TouchableOpacity
-        onPress={() => navigation.navigate('WriteReview', { targetType: 'track', targetId: track.id, targetName: track.title })}
-        style={{ backgroundColor: '#6C47FF', borderRadius: 10, paddingVertical: 13, alignItems: 'center', marginTop: 28 }}
-      >
-        <Text style={{ color: '#fff', fontWeight: '600', fontSize: 15 }}>Write a review</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
