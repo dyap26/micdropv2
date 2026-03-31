@@ -1,6 +1,6 @@
 # MicDrop
 
-Your new favorite music reviewing app. Log albums, tracks, and artists. Find your band.
+Your new favorite music reviewing app. Log albums, tracks, and artists so that your friends can see what you are listening to.
 
 ## Stack
 
@@ -23,6 +23,7 @@ micdrop/
 │   ├── hooks/
 │   │   └── useAddToList.ts  # Add items to curated lists
 │   ├── lib/
+│   │   ├── alert.ts         # General alerts
 │   │   ├── supabase.ts      # Supabase singleton
 │   │   └── spotify.ts       # Spotify API client + token cache
 │   ├── navigation/
@@ -82,8 +83,6 @@ SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 **Supabase keys** — find these in your Supabase dashboard under Project Settings → API.
 
 **Spotify keys** — create an app at [developer.spotify.com](https://developer.spotify.com/dashboard). This app uses the Client Credentials flow (no user login required), so you only need the client ID and secret.
-
-> **Warning:** Never commit `.env`. It is gitignored. For production builds, use EAS Secrets instead.
 
 ### 3. Run the Supabase migration
 
