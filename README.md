@@ -94,10 +94,10 @@ In your Supabase dashboard go to **Database → SQL Editor**, paste the contents
 npx expo start
 ```
 
-    * Scan the QR code with your phone's camera (iOS) or the Expo Go app (Android)
-    * Press 'i' for iOS simulator
-    * Press 'a' for Android emulator
-    * Press 'w' for web browser
+  * Scan the QR code with your phone's camera (iOS) or the Expo Go app (Android)
+  * Press 'i' for iOS simulator
+  * Press 'a' for Android emulator
+  * Press 'w' for web browser
 
 ## Key design decisions
 
